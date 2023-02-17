@@ -6,15 +6,12 @@ import org.springframework.stereotype.Component;
 import java.lang.annotation.*;
 
 @Documented
-@Target({ElementType.TYPE})
+@Target({ ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 @Component
 public @interface MqttService {
 
-    @AliasFor(
-            annotation = Component.class
-    )
-    String value() default "";
+	@AliasFor(annotation = Component.class)
+	String value() default "";
+
 }
-
-

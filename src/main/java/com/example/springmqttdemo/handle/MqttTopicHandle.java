@@ -1,6 +1,5 @@
 package com.example.springmqttdemo.handle;
 
-
 import com.example.springmqttdemo.annotation.MqttService;
 import com.example.springmqttdemo.annotation.MqttTopic;
 import lombok.extern.slf4j.Slf4j;
@@ -18,24 +17,25 @@ import org.springframework.messaging.Message;
 @Slf4j
 public class MqttTopicHandle {
 
-    // 这里的 # 号是通配符
-    @MqttTopic("test/#")
-    public void test(Message<?> message){
+	// 这里的 # 号是通配符
+	@MqttTopic("test/#")
+	public void test(Message<?> message) {
 
-        log.info("test="+message.getPayload());
-    }
+		log.info("test=" + message.getPayload());
+	}
 
-    // 这里的 + 号是通配符
-    @MqttTopic("topic/+/+/up")
-    public void up(Message<?> message){
+	// 这里的 + 号是通配符
+	@MqttTopic("topic/+/+/up")
+	public void up(Message<?> message) {
 
-        log.info("up="+message.getPayload());
-    }
+		log.info("up=" + message.getPayload());
+	}
 
-    // 注意 你必须先订阅
-    @MqttTopic("topic/1/2/down")
-    public void down(Message<?> message){
+	// 注意 你必须先订阅
+	@MqttTopic("topic/1/2/down")
+	public void down(Message<?> message) {
 
-        log.info("down="+message.getPayload());
-    }
+		log.info("down=" + message.getPayload());
+	}
+
 }

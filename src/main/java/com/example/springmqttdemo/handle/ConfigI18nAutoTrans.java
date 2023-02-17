@@ -13,34 +13,36 @@ import org.springframework.web.servlet.support.RequestContextUtils;
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
+
 @Service
 @RequiredArgsConstructor
-@AutoTrans(namespace = "school",globalCache = true,fields = {"schoolName"})
+@AutoTrans(namespace = "school", globalCache = true, fields = { "schoolName" })
 public class ConfigI18nAutoTrans implements AutoTransable<School> {
 
-    private final SchoolMapper schoolMapper;
+	private final SchoolMapper schoolMapper;
 
-    private final HttpServletRequest request;
-    @Override
-    public List<School> selectByIds(List<?> ids) {
+	private final HttpServletRequest request;
 
-        String language = RequestContextUtils.getLocale(request).getLanguage();
-        List<School> result = schoolMapper.selectList(Wrappers.lambdaQuery(School.class)
-                            .in(School::getId,ids)
-                            .eq(School::getLanguage, language));
-        return result;
-    }
-    @Override
-    public List<School> select() {
-        return null;
-    }
+	@Override
+	public List<School> selectByIds(List<?> ids) {
 
-    @Override
-    public School selectById(Object o) {
-        String language = RequestContextUtils.getLocale(request).getLanguage();
-        School result = schoolMapper.selectOne(Wrappers.lambdaQuery(School.class)
-                .in(School::getId,o)
-                .eq(School::getLanguage, language));
-        return result;
-    }
+		String language = RequestContextUtils.getLocale(request).getLanguage();
+		List<School> result = schoolMapper.selectList(
+				Wrappers.lambdaQuery(School.class).in(School::getId, ids).eq(School::getLanguage, language));
+		return result;
+	}
+
+	@Override
+	public List<School> select() {
+		return null;
+	}
+
+	@Override
+	public School selectById(Object o) {
+		String language = RequestContextUtils.getLocale(request).getLanguage();
+		School result = schoolMapper
+				.selectOne(Wrappers.lambdaQuery(School.class).in(School::getId, o).eq(School::getLanguage, language));
+		return result;
+	}
+
 }

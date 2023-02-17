@@ -12,19 +12,19 @@ import lombok.Data;
 @TableName("student")
 public class Student implements TransPojo {
 
-    @TableId
-    private String id;
-    // 字典翻译 ref为非必填
-    @Trans(type = TransType.DICTIONARY,key = "sex",ref = "sexName")
-    private Integer sex;
+	@TableId
+	private String id;
 
-    //这个字段可以不写，实现了TransPojo接口后有一个getTransMap方法，sexName可以让前端去transMap取
-    @TableField(
-            exist = false
-    )
-    private String sexName;
+	// 字典翻译 ref为非必填
+	@Trans(type = TransType.DICTIONARY, key = "sex", ref = "sexName")
+	private Integer sex;
 
-    //SIMPLE 翻译，用于关联其他的表进行翻译    schoolName 为 School 的一个字段
-    @Trans(type = TransType.AUTO_TRANS,key = "school")
-    private String schoolId;
+	// 这个字段可以不写，实现了TransPojo接口后有一个getTransMap方法，sexName可以让前端去transMap取
+	@TableField(exist = false)
+	private String sexName;
+
+	// SIMPLE 翻译，用于关联其他的表进行翻译 schoolName 为 School 的一个字段
+	@Trans(type = TransType.AUTO_TRANS, key = "school")
+	private String schoolId;
+
 }

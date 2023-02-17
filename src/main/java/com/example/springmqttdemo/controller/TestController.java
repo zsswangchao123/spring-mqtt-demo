@@ -23,42 +23,45 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class TestController {
 
-    private final MsgGateway msgGateway;
+	private final MsgGateway msgGateway;
 
-    public final Cache<String, Object> caffeineCache;
+	public final Cache<String, Object> caffeineCache;
 
-     //注入字典翻译服务
-    private final DictionaryTransService dictionaryTransService;
-    private final SimpleTransService simpleTransService;
+	// 注入字典翻译服务
+	private final DictionaryTransService dictionaryTransService;
 
-    private final StudentMapper studentMapper;
-    @PostConstruct
-    public void init() {
-        //在某处将字典缓存刷新到翻译服务中，以下是demo
-        Map<String,String> transMap = new HashMap<>();
-        transMap.put("0","男");
-        transMap.put("1","女");
-        dictionaryTransService.refreshCache("sex",transMap);
+	private final SimpleTransService simpleTransService;
 
-    }
+	private final StudentMapper studentMapper;
 
-    @GetMapping("/test")
-    public List<Student> test(String lang) {
-        List<Student> list = studentMapper.selectList(Wrappers.query());
+	@PostConstruct
+	public void init() {
+		// 在某处将字典缓存刷新到翻译服务中，以下是demo
+		Map<String, String> transMap = new HashMap<>();
+		transMap.put("0", "男");
+		transMap.put("1", "女");
+		dictionaryTransService.refreshCache("sex", transMap);
 
-        return list;
-        //
-    }
-    //获取缓存
-    @GetMapping("/get")
-    public Object get(String key) {
-        return caffeineCache.getIfPresent(key);
-    }
+	}
 
-    //清除缓存
-    @GetMapping("/clean")
-    public void clean(String key) {
-        caffeineCache.invalidate(key);
-    }
+	@GetMapping("/test")
+	public List<Student> test(String lang) {
+		List<Student> list = studentMapper.selectList(Wrappers.query());
+
+		return list;
+		//
+	}
+
+	// 获取缓存
+	@GetMapping("/get")
+	public Object get(String key) {
+		return caffeineCache.getIfPresent(key);
+	}
+
+	// 清除缓存
+	@GetMapping("/clean")
+	public void clean(String key) {
+		caffeineCache.invalidate(key);
+	}
 
 }

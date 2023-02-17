@@ -11,51 +11,52 @@ import org.springframework.stereotype.Component;
 @Configuration
 public class MqttProperties {
 
-    /**
-     * 用户名
-     */
-    private String username;
+	/**
+	 * 用户名
+	 */
+	private String username;
 
-    /**
-     * 密码
-     */
-    private String password;
+	/**
+	 * 密码
+	 */
+	private String password;
 
-    /**
-     * 连接地址
-     */
-    private String hostUrl;
+	/**
+	 * 连接地址
+	 */
+	private String hostUrl;
 
-    /**
-     * 进-客户Id
-     */
-    private String inClientId;
+	/**
+	 * 进-客户Id
+	 */
+	private String inClientId;
 
-    /**
-     * 出-客户Id
-     */
-    private String outClientId;
+	/**
+	 * 出-客户Id
+	 */
+	private String outClientId;
 
-    /**
-     * 客户Id
-     */
-   // private String clientId;
+	/**
+	 * 客户Id
+	 */
+	// private String clientId;
 
-    /**
-     * 默认连接话题
-     */
-    private String defaultTopic;
+	/**
+	 * 默认连接话题
+	 */
+	private String defaultTopic;
 
-    /**
-     * 超时时间
-     */
-    private int timeout;
+	/**
+	 * 超时时间
+	 */
+	private int timeout;
 
-    /**
-     * 保持连接数
-     */
-    private int keepalive;
+	/**
+	 * 保持连接数
+	 */
+	private int keepalive;
 
-    /**是否清除session*/
-    private boolean clearSession;
+	/** 是否清除session */
+	private boolean clearSession;
+
 }

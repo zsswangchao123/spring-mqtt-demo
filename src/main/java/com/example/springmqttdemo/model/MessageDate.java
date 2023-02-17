@@ -4,6 +4,9 @@ import lombok.Data;
 
 @Data
 public class MessageDate {
-    private String topic;
-    private String message;
+
+	private String topic;
+
+	private String message;
+
 }
