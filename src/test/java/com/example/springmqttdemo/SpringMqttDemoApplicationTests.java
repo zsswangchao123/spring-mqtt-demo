@@ -8,6 +8,7 @@ class SpringMqttDemoApplicationTests {
 
 	@Test
 	void contextLoads() {
+
 	}
 
 }

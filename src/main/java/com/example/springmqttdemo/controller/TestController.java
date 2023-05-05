@@ -1,38 +1,32 @@
 package com.example.springmqttdemo.controller;
 
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.example.springmqttdemo.config.MsgGateway;
-import com.example.springmqttdemo.config.MyMessageSource;
-import com.example.springmqttdemo.mapper.StudentMapper;
-import com.example.springmqttdemo.model.School;
-import com.example.springmqttdemo.model.Student;
+import com.alibaba.fastjson.JSONObject;
+import com.example.springmqttdemo.component.OpenAiApi;
+import com.example.springmqttdemo.model.*;
 import com.fhs.trans.service.impl.DictionaryTransService;
-import com.fhs.trans.service.impl.SimpleTransService;
 import com.github.benmanes.caffeine.cache.Cache;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.PostConstruct;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
 public class TestController {
 
-	private final MsgGateway msgGateway;
 
 	public final Cache<String, Object> caffeineCache;
 
 	// 注入字典翻译服务
 	private final DictionaryTransService dictionaryTransService;
 
-	private final SimpleTransService simpleTransService;
 
-	private final StudentMapper studentMapper;
+	private final OpenAiApi openAiApi;
 
 	@PostConstruct
 	public void init() {
@@ -45,11 +39,24 @@ public class TestController {
 	}
 
 	@GetMapping("/test")
-	public List<Student> test(String lang) {
-		List<Student> list = studentMapper.selectList(Wrappers.query());
-
-		return list;
-		//
+	public Object test(String lang) {
+		ChatMessage systemMessage = new ChatMessage("user", lang);
+		List<ChatMessage> messages = Arrays.asList(systemMessage);
+		ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
+				.model("gpt-3.5-turbo-0301")
+				.messages(messages)
+				.user("testing")
+				.max_tokens(500)
+				.temperature(1.0)
+				.build();
+		ExecuteRet executeRet = openAiApi.post(PathConstant.COMPLETIONS.CREATE_CHAT_COMPLETION, JSONObject.toJSONString(chatCompletionRequest),
+				null);
+		JSONObject result = JSONObject.parseObject(executeRet.getRespStr());
+		List<ChatCompletionChoice> choices = result.getJSONArray("choices").toJavaList(ChatCompletionChoice.class);
+		System.out.println(choices.get(0).getMessage().getContent());
+		ChatMessage context = new ChatMessage(choices.get(0).getMessage().getRole(), choices.get(0).getMessage().getContent());
+		System.out.println(context.getContent());
+		return context;
 	}
 
 	// 获取缓存

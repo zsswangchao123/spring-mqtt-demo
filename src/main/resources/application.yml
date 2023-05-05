@@ -55,5 +55,10 @@ easy-trans:
   autotrans:
     package: com.example.springmqttdemo.handle.**
 
+open:
+  ai:
+    url: https://api.openai.com/
+    token: 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
+
 
 
