@@ -1,15 +1,23 @@
 package com.example.springmqttdemo.controller;
 
 import com.alibaba.fastjson.JSONObject;
+import com.example.springmqttdemo.component.IOcrService;
 import com.example.springmqttdemo.component.OpenAiApi;
 import com.example.springmqttdemo.model.*;
 import com.fhs.trans.service.impl.DictionaryTransService;
 import com.github.benmanes.caffeine.cache.Cache;
 import lombok.RequiredArgsConstructor;
+import net.sourceforge.tess4j.Tesseract;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.PostConstruct;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +35,8 @@ public class TestController {
 
 
 	private final OpenAiApi openAiApi;
+
+	private final IOcrService iOrcService;
 
 	@PostConstruct
 	public void init() {
@@ -70,5 +80,31 @@ public class TestController {
 	public void clean(String key) {
 		caffeineCache.invalidate(key);
 	}
+
+
+	@RequestMapping("/actionOcr")
+	@ResponseBody
+	public String actionOcr(MultipartFile file) throws Exception {
+		return this.iOrcService.actionOcr(file);
+//		Tesseract tesseract = new Tesseract();
+//		File convFile = convert(file);
+//		tesseract.setDatapath("D:\\Program Files\\Tesseract-OCR\\tessdata");
+//		tesseract.setLanguage("chi_sim");
+//		String result = tesseract.doOCR(convFile);
+//		System.out.println(result);
+
+		//return "";
+
+	}
+
+	public static File convert(MultipartFile file) throws IOException {
+		File convFile = new File(file.getOriginalFilename());
+		convFile.createNewFile();
+		FileOutputStream fos = new FileOutputStream(convFile);
+		fos.write(file.getBytes());
+		fos.close();
+		return convFile;
+	}
+
 
 }

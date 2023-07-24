@@ -58,7 +58,14 @@ easy-trans:
 open:
   ai:
     url: https://api.openai.com/
-    token: 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
+    token: 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
+
+
+baidu:
+  ocr:
+    appId: 36328934
+    apiKey: ws45w7B6cCH0AXESD9zKldsE
+    secretKey: vzGydj1ljMax3msMlp9wfD3HEYKElF7F
 
 
 
