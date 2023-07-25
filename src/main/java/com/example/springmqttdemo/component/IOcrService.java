@@ -1,5 +1,7 @@
 package com.example.springmqttdemo.component;
 
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.util.IdcardUtil;
 import com.example.springmqttdemo.config.BaiduOcrProperties;
 import com.example.springmqttdemo.model.IdcardInfo;
 import lombok.RequiredArgsConstructor;
@@ -14,8 +16,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import sun.misc.BASE64Encoder;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +32,7 @@ public class IOcrService {
     private final BaiduOcrProperties baiduOcrProperties;
 
     //固定字符
-    private static List<String> FIXED_STR;
+    private static final List<String> FIXED_STR;
 
 
     static {
@@ -43,7 +43,7 @@ public class IOcrService {
 
     /**
      * 请求ocr接口，返回json数据
-     * @param multipartFile 文件
+     * @param file 上传的文件
      * @return json 字符串数据
      */
     public String actionOcr(MultipartFile file) {
@@ -71,13 +71,13 @@ public class IOcrService {
             headers.setContentType(MediaType.APPLICATION_JSON);
             //构建请求参数
             //Build request parameters
-            MultiValueMap<String, String> map = new LinkedMultiValueMap<String, String>();
+            MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
             //添加请求参数images，并将Base64编码的图片传入
             //Add the request parameter Images and pass in the Base64 encoded image
             map.add("images", base64Img);
             //构建请求
             //Build request
-            HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(map, headers);
+            HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(map, headers);
             RestTemplate restTemplate = new RestTemplate();
             //发送请求
             //Send the request
@@ -87,18 +87,19 @@ public class IOcrService {
             //Parse the Json return value
             List<List<Map>> json1 = (List<List<Map>>) json.get("results");
 
+            //优先获取连接字段
+            getConnect(json1,idcardInfo);
+
+
+
             //获取身份证号
             getIdCardNum(json1,idcardInfo);
             //获取姓名
             getName(json1,idcardInfo);
             //获取民族
             getNation(json1,idcardInfo);
-            //获取出生日期
-            getBirth(json1,idcardInfo);
             //获取住址
             getAddress(json1,idcardInfo);
-
-
 
 
 
@@ -107,43 +108,66 @@ public class IOcrService {
             //获取有效期限
             getValid(json1,idcardInfo);
 
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            return "上传失败," + e.getMessage();
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return "上传失败," + e.getMessage();
         }
         return idcardInfo.toString();
     }
 
-    //获取身份证号
-    private void getIdCardNum(List<List<Map>> json,IdcardInfo idcardInfo) {
-        Pattern idPattern = Pattern.compile("\\d{16,18}");
-        Pattern xPattern = Pattern.compile("\\d*[Xx]");
+
+
+
+
+    private void getConnect(List<List<Map>> json,IdcardInfo idcardInfo){
         for (int i = 0; i < json.get(0).size(); i++) {
             String text = json.get(0).get(i).get("text").toString();
             if (FIXED_STR.contains(text)) {
                 continue;
             }
-            Matcher idMatcher = idPattern.matcher(text);
-            Matcher xMatcher = xPattern.matcher(text);
-
-            if (xMatcher.find()) {
-                String res = xMatcher.group();
-                if (res.length() == 18) {
-                    idcardInfo.setIdNumber(res.replace("号码", ""));
-                    idcardInfo.setSex((Integer.parseInt(res.substring(16, 17)) % 2 == 0) ? "女" : "男");
-                }
-            } else if (idMatcher.find()) {
-                String res = idMatcher.group();
-                if (res.length() == 18) {
-                    idcardInfo.setIdNumber(res.replace("号码", ""));
-                    idcardInfo.setSex((Integer.parseInt(res.substring(16, 17)) % 2 == 0) ? "女" : "男");
-                }
+            if (text.startsWith("公民身份号码")) {
+                idcardInfo.setIdNumber(text.replace("公民身份号码", ""));
             }
+            if (text.startsWith("姓名")) {
+                idcardInfo.setName(text.replace("姓名", ""));
+            }
+            if (text.startsWith("民族")) {
+                idcardInfo.setNation(text.replace("民族", ""));
+            }
+            if (text.startsWith("住址")) {
+                idcardInfo.setAddress(text.replace("住址", ""));
+            }
+            if (text.startsWith("签发机关")) {
+                idcardInfo.setIssue(text.replace("签发机关", ""));
+            }
+            if (text.startsWith("有效期限")) {
+                idcardInfo.setValidPeriod(text.replace("有效期限", ""));
+            }
+        }
+    }
+
+    //获取身份证号
+    private void getIdCardNum(List<List<Map>> json,IdcardInfo idcardInfo) {
+
+        for (int i = 0; i < json.get(0).size(); i++) {
             if (idcardInfo.getIdNumber()!=null) {
                 break;
+            }
+            String text = json.get(0).get(i).get("text").toString();
+            if (FIXED_STR.contains(text)) {
+                continue;
+            }
+            if (text.startsWith("公民身份号码")) {
+                idcardInfo.setIdNumber(text.replace("公民身份号码", ""));
+            }else {
+                if (IdcardUtil.isValidCard(text)) {
+                    //获取身份证号
+                    idcardInfo.setIdNumber(text);
+                    DateTime birthDate = IdcardUtil.getBirthDate(idcardInfo.getIdNumber());
+                    idcardInfo.setBirth(birthDate.toString("yyyy-MM-dd"));
+                    int genderByIdCard = IdcardUtil.getGenderByIdCard(idcardInfo.getIdNumber());
+                    idcardInfo.setSex(genderByIdCard==1?"男":"女");
+                }
             }
         }
     }
@@ -152,6 +176,9 @@ public class IOcrService {
     private void getName(List<List<Map>> json,IdcardInfo idcardInfo) {
         Pattern namePattern = Pattern.compile("[\u4e00-\u9fa5]{2,4}");
         for (int i = 0; i < json.get(0).size(); i++) {
+            if (idcardInfo.getName()!=null) {
+                break;
+            }
             String text = json.get(0).get(i).get("text").toString();
             if (FIXED_STR.contains(text)) {
                 continue;
@@ -167,9 +194,6 @@ public class IOcrService {
 
                 }
             }
-            if (idcardInfo.getName()!=null) {
-                break;
-            }
         }
     }
 
@@ -177,6 +201,9 @@ public class IOcrService {
     private void getNation(List<List<Map>> json,IdcardInfo idcardInfo) {
 
         for (int i = 0; i < json.get(0).size(); i++) {
+            if (idcardInfo.getNation()!=null) {
+                break;
+            }
             String text = json.get(0).get(i).get("text").toString();
             if (FIXED_STR.contains(text)) {
                 continue;
@@ -187,32 +214,6 @@ public class IOcrService {
             if (text.startsWith("族")) {
                 idcardInfo.setNation(text.replace("族", ""));
             }
-            if (idcardInfo.getNation()!=null) {
-                break;
-            }
-        }
-    }
-
-    //获取出生日期
-    private void getBirth(List<List<Map>> json,IdcardInfo idcardInfo) {
-        Pattern birthPattern = Pattern.compile("\\d{4}年\\d{1,2}月\\d{1,2}日");
-        for (int i = 0; i < json.get(0).size(); i++) {
-            String text = json.get(0).get(i).get("text").toString();
-            if (FIXED_STR.contains(text)) {
-                continue;
-            }
-            if (text.startsWith("出生")) {
-                idcardInfo.setBirth(text.replace("出生", ""));
-            }else {
-                Matcher birthMatcher = birthPattern.matcher(text);
-                if (birthMatcher.find()) {
-                    String res = birthMatcher.group();
-                    idcardInfo.setBirth(res);
-                }
-            }
-            if (idcardInfo.getBirth()!=null) {
-                break;
-            }
         }
     }
 
@@ -221,6 +222,9 @@ public class IOcrService {
         //大于8个汉字
         Pattern addressPattern = Pattern.compile("[\u4e00-\u9fa5]{8,}");
         for (int i = 0; i < json.get(0).size(); i++) {
+            if (idcardInfo.getAddress()!=null) {
+               break;
+            }
             String text = json.get(0).get(i).get("text").toString();
             if (FIXED_STR.contains(text)) {
                 continue;
@@ -241,7 +245,6 @@ public class IOcrService {
                         idcardInfo.setAddress(idcardInfo.getAddress()+text1);
                     }
                 }
-                break;
             }
         }
     }
@@ -250,6 +253,9 @@ public class IOcrService {
     private void getIssue(List<List<Map>> json,IdcardInfo idcardInfo) {
         Pattern issuePattern = Pattern.compile("[\u4e00-\u9fa5]{8,}");
         for (int i = 0; i < json.get(0).size(); i++) {
+            if (idcardInfo.getIssue()!=null) {
+                break;
+            }
             String text = json.get(0).get(i).get("text").toString();
             if (FIXED_STR.contains(text)) {
                 continue;
@@ -263,16 +269,19 @@ public class IOcrService {
                     idcardInfo.setIssue(res);
                 }
             }
-            if (idcardInfo.getIssue()!=null) {
-                break;
-            }
         }
     }
 
     //获取有效期限
     private void getValid(List<List<Map>> json,IdcardInfo idcardInfo) {
-        Pattern validPattern = Pattern.compile("\\d{4}.\\d{1,2}.\\d{1,2}-\\d{4}.\\d{1,2}.\\d{1,2}.");
+       // 2019.02.11-2039.02.11正则
+        Pattern validPattern = Pattern.compile("\\d{4}\\.\\d{2}\\.\\d{2}-\\d{4}\\.\\d{2}\\.\\d{2}");
+        // 2019.02.11-长期正则
+        Pattern validPattern1 = Pattern.compile("\\d{4}\\.\\d{2}\\.\\d{2}-长期");
         for (int i = 0; i < json.get(0).size(); i++) {
+            if (idcardInfo.getValidPeriod() != null) {
+                break;
+            }
             String text = json.get(0).get(i).get("text").toString();
             if (FIXED_STR.contains(text)) {
                 continue;
@@ -281,13 +290,15 @@ public class IOcrService {
                 idcardInfo.setValidPeriod(text.replace("有效期限", ""));
             } else {
                 Matcher validMatcher = validPattern.matcher(text);
+                Matcher validMatcher1 = validPattern1.matcher(text);
                 if (validMatcher.find()) {
                     String res = validMatcher.group();
                     idcardInfo.setValidPeriod(res);
                 }
-            }
-            if (idcardInfo.getValidPeriod() != null) {
-                break;
+                if (validMatcher1.find()) {
+                    String res = validMatcher1.group();
+                    idcardInfo.setValidPeriod(res);
+                }
             }
         }
     }
