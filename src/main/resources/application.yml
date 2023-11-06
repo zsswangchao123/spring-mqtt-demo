@@ -68,4 +68,30 @@ baidu:
     secretKey: vzGydj1ljMax3msMlp9wfD3HEYKElF7F
 
 
+# 是否启用 Dataway 功能（必选：默认false）
+HASOR_DATAQL_DATAWAY: true
+
+# 是否开启 Dataway 后台管理界面（必选：默认false）
+HASOR_DATAQL_DATAWAY_ADMIN: true
+
+# dataway  API工作路径（可选，默认：/api/）
+HASOR_DATAQL_DATAWAY_API_URL: /api/
+
+# dataway-ui 的工作路径（可选，默认：/interface-ui/）
+HASOR_DATAQL_DATAWAY_UI_URL: /interface-ui/
+
+# SQL执行器方言设置（可选，建议设置）
+HASOR_DATAQL_FX_PAGE_DIALECT: mysql
+
+gear:
+  wenxin:
+    api-key: RiHROZe6bwhdCahP1Ho02ixN
+    secret-key: jAEvtWUvj4bSgW5jkfA8pycwWGLu3tqE
+tio:
+  websocket:
+    server:
+      port: 9871
+      heartbeat-timeout: 60000
+    name: message-tio
+
 

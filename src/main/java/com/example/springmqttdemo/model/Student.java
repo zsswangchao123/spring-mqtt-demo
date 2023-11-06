@@ -1,5 +1,6 @@
 package com.example.springmqttdemo.model;
 
+import cn.hutool.core.util.HexUtil;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
